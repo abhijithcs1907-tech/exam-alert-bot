@@ -1,29 +1,35 @@
-import os
 import requests
 
-SID = os.environ["TWILIO_ACCOUNT_SID"]
-TOKEN = os.environ["TWILIO_AUTH_TOKEN"]
+URLS = {
+    "A1": "https://www.goethe.de/ins/in/en/spr/prf/gzsd1.cfm",
+    "A2": "https://www.goethe.de/ins/in/en/spr/prf/gzsd2.cfm",
+    "B1": "https://www.goethe.de/ins/in/en/spr/prf/gzb1.cfm",
+    "B2": "https://www.goethe.de/ins/in/en/spr/prf/gzb2.cfm",
+}
 
-numbers = [
-    "whatsapp:+919074526392",
-    "whatsapp:+917994046289"
-]
+headers = {
+    "User-Agent": "Mozilla/5.0"
+}
 
-url = f"https://api.twilio.com/2010-04-01/Accounts/{SID}/Messages.json"
+for level, url in URLS.items():
 
-for number in numbers:
-    data = {
-        "From": "whatsapp:+17372508034",
-        "To": number,
-        "Body": "🔔 Exam Alert Bot is working! Goethe + telc alerts coming soon 🇩🇪"
-    }
+    try:
+        response = requests.get(
+            url,
+            headers=headers,
+            timeout=30
+        )
 
-    response = requests.post(
-        url,
-        data=data,
-        auth=(SID, TOKEN),
-        timeout=30
-    )
+        print(f"{level}: HTTP {response.status_code}")
 
-    print("Status:", response.status_code)
-    print("Response:", response.text)
+        if response.status_code == 200:
+            print(f"✅ {level} page accessible")
+        elif response.status_code == 403:
+            print(f"⚠️ {level} blocked automated request")
+        else:
+            print(f"⚠️ {level} returned {response.status_code}")
+
+    except Exception as e:
+        print(f"❌ {level} error:", e)
+
+print("\n🇩🇪 Goethe checker finished.")
