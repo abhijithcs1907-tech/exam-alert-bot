@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+import re
 
 URL = "https://hyderabad.german.in/"
 
@@ -16,10 +17,20 @@ if not response.ok:
     raise SystemExit(1)
 
 soup = BeautifulSoup(response.text, "html.parser")
-
 text = soup.get_text(" ", strip=True)
 
-print("✅ Hyderabad page loaded")
-print("\n--- PAGE TEXT ---\n")
-print(text[:10000])
-print("\n--- END ---")
+print("✅ Hyderabad exam page loaded")
+print("\n🇩🇪 EXAM INFORMATION FOUND:\n")
+
+for level in ["A1", "A2", "B1", "B2"]:
+    pattern = rf"GOETHE-ZERTIFIKAT {level}.*?(?=GOETHE-ZERTIFIKAT|Important Notice:|$)"
+    matches = re.findall(pattern, text, re.IGNORECASE)
+
+    if matches:
+        print(f"### {level}")
+        print(matches[0].strip())
+        print()
+    else:
+        print(f"⚠️ {level} information not found")
+
+print("🔎 Exam information check completed.")
