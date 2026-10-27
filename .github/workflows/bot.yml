@@ -5,6 +5,9 @@ on:
     - cron: "*/10 * * * *"
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   check-exams:
     runs-on: ubuntu-latest
@@ -26,4 +29,12 @@ jobs:
         env:
           TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
           TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
-        run: python goethe_checker.py
+        run: python main.py
+
+      - name: Save exam state
+        run: |
+          git config user.name "exam-alert-bot"
+          git config user.email "exam-alert-bot@users.noreply.github.com"
+          git add exam_state.json
+          git diff --cached --quiet || git commit -m "Update exam state"
+          git push
