@@ -1,4 +1,14 @@
-name: Exam Alert Bot
+       - name: Check secret
+        env:
+          SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
+        run: |
+          if [ -z "$SID" ]; then
+            echo "SID SECRET NOT FOUND"
+            exit 1
+          else
+            echo "SID SECRET FOUND"
+          fi
+          name: Exam Alert Bot
 
 on:
   schedule:
