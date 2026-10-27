@@ -23,16 +23,13 @@ jobs:
 
       - name: Install packages
         run: |
-          pip install requests beautifulsoup4 twilio
+          pip install requests beautifulsoup4
 
-      - name: Test Hyderabad checker
+      - name: Run combined exam checker
         env:
           TWILIO_ACCOUNT_SID: ${{ secrets.TWILIO_ACCOUNT_SID }}
           TWILIO_AUTH_TOKEN: ${{ secrets.TWILIO_AUTH_TOKEN }}
         run: python main.py
-
-      - name: Test Coimbatore checker
-        run: python coimbatore_checker.py
 
       - name: Save exam state
         run: |
