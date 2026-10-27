@@ -1,4 +1,4 @@
-       - name: Exam Alert Bot
+name: Exam Alert Bot
 
 on:
   schedule:
