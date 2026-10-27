@@ -20,13 +20,20 @@ text = soup.get_text(" ", strip=True)
 
 print("\nCoimbatore Goethe Exam Information:\n")
 
-for level in ["A1", "A2", "B1", "B2"]:
-    pattern = rf"Goethe[- ]?Zertifikat.*?{level}.*?(?=Goethe[- ]?Zertifikat|$)"
+patterns = {
+    "A1": r"Goethe-Zertifikat A1:.*?(?=Goethe-Zertifikat A2|Goethe-Zertifikat B1|Goethe-Zertifikat B2|$)",
+    "A2": r"Goethe-Zertifikat A2.*?(?=Goethe-Zertifikat A1|Goethe-Zertifikat B1|Goethe-Zertifikat B2|$)",
+    "B1": r"Goethe-Zertifikat B1.*?(?=Goethe-Zertifikat A1|Goethe-Zertifikat A2|Goethe-Zertifikat B2|$)",
+    "B2": r"Goethe-Zertifikat B2.*?(?=Goethe-Zertifikat A1|Goethe-Zertifikat A2|Goethe-Zertifikat B1|$)"
+}
+
+for level, pattern in patterns.items():
     matches = re.findall(pattern, text, re.IGNORECASE)
 
     print(f"\n{level}:")
+
     if matches:
-        print(matches[0])
+        print(matches[0].strip())
     else:
         print("No information found")
 
