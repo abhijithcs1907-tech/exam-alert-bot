@@ -1,0 +1,26 @@
+name: Exam Alert Bot
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  check-exams:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get bot code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install packages
+        run: |
+          pip install requests beautifulsoup4
+
+      - name: Run exam checker
+        run: python main.py
