@@ -12,21 +12,22 @@ response = requests.get(
 print("Status:", response.status_code)
 
 if not response.ok:
-    print("❌ Hyderabad Goethe-Zentrum page failed")
+    print("❌ Page failed")
     raise SystemExit(1)
 
 soup = BeautifulSoup(response.text, "html.parser")
 text = soup.get_text(" ", strip=True)
 
-levels = ["Goethe-Zertifikat A1", "Goethe-Zertifikat A2",
-          "Goethe-Zertifikat B1", "Goethe-Zertifikat B2"]
+levels = ["A1", "A2", "B1", "B2"]
 
-print("✅ Hyderabad Goethe-Zentrum reachable!")
+print("✅ Hyderabad exam page loaded")
 
 for level in levels:
-    if level in text:
-        print(f"✅ {level} found")
-    else:
-        print(f"⚠️ {level} not found")
+    marker = f"Goethe-Zertifikat {level}"
 
-print("\n🇩🇪 Hyderabad exam page checked successfully.")
+    if marker in text:
+        print(f"✅ {level} exam found")
+    else:
+        print(f"⚠️ {level} exam not found")
+
+print("\n🔎 Exam information detected successfully.")
