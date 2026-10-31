@@ -1,1 +1,25 @@
+name: Kerala Debug
 
+on:
+  workflow_dispatch:
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Get bot code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install packages
+        run: |
+          pip install playwright
+          playwright install --with-deps chromium
+
+      - name: Run Kerala diagnostic
+        run: python kerala_debug.py
