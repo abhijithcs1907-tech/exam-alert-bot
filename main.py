@@ -114,6 +114,9 @@ def send_telegram(message_text):
 current = get_all_exams()
 old = load_old_state()
 
+# 🧪 TEMPORARY TEST ALERT
+send_telegram("🧪 TEST ALERT\n\nTelegram Exam Alert Bot is working! ✅")
+
 print("\n========== CURRENT EXAM INFORMATION ==========\n")
 
 for centre, exams in current.items():
