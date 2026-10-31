@@ -23,7 +23,8 @@ jobs:
 
       - name: Install packages
         run: |
-          pip install requests beautifulsoup4
+          pip install requests beautifulsoup4 playwright
+          playwright install chromium
 
       - name: Run combined exam checker
         env:
