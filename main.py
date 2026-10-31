@@ -6,13 +6,8 @@ from bs4 import BeautifulSoup
 
 STATE_FILE = "exam_state.json"
 
-SID = os.environ["TWILIO_ACCOUNT_SID"]
-TOKEN = os.environ["TWILIO_AUTH_TOKEN"]
-
-RECIPIENTS = [
-    "whatsapp:+919074526392",
-    "whatsapp:+917994046289"
-]
+TELEGRAM_TOKEN = os.environ["TELEGRAM_BOT_TOKEN"]
+TELEGRAM_CHAT_ID = os.environ["TELEGRAM_CHAT_ID"]
 
 CENTRES = {
     "Goethe Hyderabad": "https://hyderabad.german.in/",
@@ -53,7 +48,7 @@ def get_coimbatore(text):
         "A1": r"Goethe-Zertifikat A1:.*?(?=Goethe-Zertifikat A2|Goethe-Zertifikat B1|Goethe-Zertifikat B2|$)",
         "A2": r"Goethe-Zertifikat A2.*?(?=Goethe-Zertifikat A1|Goethe-Zertifikat B1|Goethe-Zertifikat B2|$)",
         "B1": r"Goethe-Zertifikat B1.*?(?=Goethe-Zertifikat A1|Goethe-Zertifikat A2|Goethe-Zertifikat B2|$)",
-        "B2": r"Goethe-Zertifikat B2.*?(?=Goethe-Zertifikat A1|Goethe-Zertifikat A2|Goethe-Zertifikat B1|$)"
+        "B2": r"Goethe-Zertifikat B2.*?(?=Goethe-Zertifikat A1|Goethe-Zertifikat A2|Goethe-Zertifikat B1|Goethe-Zertifikat B2|$)"
     }
 
     exams = {}
@@ -94,29 +89,26 @@ def save_state(data):
         json.dump(data, file, indent=2, ensure_ascii=False)
 
 
-def send_whatsapp(message_text):
-    url = f"https://api.twilio.com/2010-04-01/Accounts/{SID}/Messages.json"
+def send_telegram(message_text):
+    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
 
-    for number in RECIPIENTS:
-        data = {
-            "From": "whatsapp:+17372508034",
-            "To": number,
-            "Body": message_text
-        }
+    data = {
+        "chat_id": TELEGRAM_CHAT_ID,
+        "text": message_text
+    }
 
-        response = requests.post(
-            url,
-            data=data,
-            auth=(SID, TOKEN),
-            timeout=30
-        )
+    response = requests.post(
+        url,
+        data=data,
+        timeout=30
+    )
 
-        print("WhatsApp status:", response.status_code)
+    print("Telegram status:", response.status_code)
 
-        if not response.ok:
-            print("WhatsApp error:", response.text)
-        else:
-            print("WhatsApp sent successfully.")
+    if not response.ok:
+        print("Telegram error:", response.text)
+    else:
+        print("Telegram alert sent successfully.")
 
 
 current = get_all_exams()
@@ -161,7 +153,7 @@ else:
         )
 
         print("\n🚨 EXAM CHANGE DETECTED!")
-        send_whatsapp(alert)
+        send_telegram(alert)
 
     else:
         print("✅ No exam information changes.")
