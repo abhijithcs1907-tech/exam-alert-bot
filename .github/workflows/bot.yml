@@ -24,7 +24,7 @@ jobs:
       - name: Install packages
         run: |
           pip install requests beautifulsoup4 playwright
-          playwright install chromium
+          playwright install --with-deps chromium
 
       - name: Run combined exam checker
         env:
