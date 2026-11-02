@@ -1,3 +1,4 @@
+import re
 from playwright.sync_api import sync_playwright
 
 URL = "https://trivandrum.german.in/home-exams?cmbcentre=0"
@@ -11,75 +12,79 @@ with sync_playwright() as p:
 
     page.goto(
         URL,
-        wait_until="domcontentloaded",
+        wait_until="networkidle",
         timeout=60000
     )
 
-    print("Page loaded.")
+    page.wait_for_timeout(5000)
 
-    # Allow JavaScript to finish creating the exam elements
-    page.wait_for_timeout(10000)
+    print("\n========== SCRIPTS ==========")
 
-    print("\n========== PAGE CHECK ==========")
+    scripts = page.locator("script")
 
-    print("URL:", page.url)
-    print("Title:", page.title())
+    print("Script count:", scripts.count())
 
-    # Check all select elements
-    selects = page.locator("select")
+    for i in range(scripts.count()):
 
-    print("\nSelect count:", selects.count())
+        script = scripts.nth(i)
 
-    for i in range(selects.count()):
+        src = script.get_attribute("src")
 
-        select = selects.nth(i)
+        if src:
+            print(f"\nSCRIPT {i}: {src}")
 
-        print(f"\nSELECT {i}")
+        else:
+            text = script.inner_text()
 
-        print("ID:", select.get_attribute("id"))
-        print("Name:", select.get_attribute("name"))
-        print("Class:", select.get_attribute("class"))
+            if any(word in text.lower() for word in [
+                "exam_batch",
+                "remaining",
+                "seat",
+                "batch_id",
+                "cmbexamcentre",
+                "home-exams"
+            ]):
+                print(f"\nINLINE SCRIPT {i}:")
+                print(text[:10000])
 
-        options = select.locator("option")
+    print("\n========== PAGE HTML SEARCH ==========")
 
-        print("Options:", options.count())
-
-        for j in range(min(options.count(), 10)):
-
-            option = options.nth(j)
-
-            print(
-                " ",
-                option.inner_text().strip(),
-                "| value:",
-                option.get_attribute("value")
-            )
-
-    print("\n========== EXAM CENTRE SEARCH ==========")
-
-    # Search the HTML for the known centre ID
     html = page.content()
 
-    if "cmbExamCentre" in html:
-        print("FOUND: cmbExamCentre")
-    else:
-        print("NOT FOUND: cmbExamCentre")
+    keywords = [
+        "remaining",
+        "seat",
+        "batch_id",
+        "exam_batch",
+        "cmbExamCentre",
+        "ajax",
+        "api"
+    ]
 
-    if "Trivandrum" in html:
-        print("FOUND: Trivandrum")
-    else:
-        print("NOT FOUND: Trivandrum")
+    for keyword in keywords:
 
-    if "Remaining Seats" in html:
-        print("FOUND: Remaining Seats")
-    else:
-        print("NOT FOUND: Remaining Seats")
+        print(
+            keyword,
+            "=>",
+            keyword.lower() in html.lower()
+        )
 
-    print("\n========== PAGE TEXT ==========")
+    print("\n========== POSSIBLE URLS ==========")
 
-    text = page.locator("body").inner_text()
+    urls = re.findall(
+        r'https?://[^"\']+',
+        html
+    )
 
-    print(text[:12000])
+    for url in urls:
+
+        if any(word in url.lower() for word in [
+            "api",
+            "ajax",
+            "exam",
+            "batch"
+        ]):
+            print(url)
 
     browser.close()
 
