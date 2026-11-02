@@ -62,4 +62,10 @@ with sync_playwright() as p:
         else:
             print("Batch ID NOT FOUND in page.")
 
-    print("\n========== WAITING FOR NETWORK =========
+    print("\n========== WAITING FOR NETWORK ==========")
+
+    page.wait_for_timeout(10000)
+
+    print("\n========== DEBUG COMPLETE ==========")
+
+    browser.close()
