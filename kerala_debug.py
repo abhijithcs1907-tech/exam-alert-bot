@@ -15,25 +15,33 @@ with sync_playwright() as p:
     print("Opening Kerala exam portal...")
 
     def handle_request(request):
-        print(f"\nREQUEST: {request.method} {request.url}")
+        url = request.url.lower()
 
-        if request.post_data:
-            print("POST DATA:", request.post_data)
+        if any(x in url for x in [
+            "exam", "batch", "seat", "ajax", "api"
+        ]):
+            print(f"\nREQUEST: {request.method} {request.url}")
+
+            if request.post_data:
+                print("POST DATA:", request.post_data)
 
     def handle_response(response):
-        print(f"\nRESPONSE: {response.status} {response.url}")
+        url = response.url.lower()
 
-        try:
-            content_type = response.headers.get("content-type", "")
+        if any(x in url for x in [
+            "exam", "batch", "seat", "ajax", "api"
+        ]):
+            print(f"\nRESPONSE: {response.status} {response.url}")
 
-            if "json" in content_type.lower():
+            try:
                 text = response.text()
 
-                print("JSON RESPONSE:")
-                print(text[:5000])
+                if text:
+                    print("RESPONSE BODY:")
+                    print(text[:5000])
 
-        except Exception as e:
-            print("Response read error:", e)
+            except Exception as e:
+                print("Could not read response:", e)
 
     page.on("request", handle_request)
     page.on("response", handle_response)
@@ -46,26 +54,72 @@ with sync_playwright() as p:
 
     page.wait_for_timeout(5000)
 
-    print("\n========== BATCH DATA ==========")
+    print("\n========== SELECT ELEMENTS ==========")
 
-    html = page.content()
+    selects = page.locator("select")
 
-    for name, batch_id in BATCHES.items():
+    print("Total selects:", selects.count())
 
-        print("\n================================")
-        print(name)
-        print("Batch ID:", batch_id)
-        print("================================")
+    for i in range(selects.count()):
 
-        if batch_id in html:
-            print("Batch ID FOUND in page.")
-        else:
-            print("Batch ID NOT FOUND in page.")
+        select = selects.nth(i)
 
-    print("\n========== WAITING FOR NETWORK ==========")
+        options = select.locator("option")
 
-    page.wait_for_timeout(10000)
+        values = []
 
-    print("\n========== DEBUG COMPLETE ==========")
+        for j in range(options.count()):
+
+            option = options.nth(j)
+
+            text = option.inner_text().strip()
+            value = option.get_attribute("value")
+
+            if value in BATCHES.values():
+                values.append((text, value))
+
+        if values:
+
+            print("\nSELECT:", i)
+
+            for text, value in values:
+                print(
+                    "FOUND:",
+                    text,
+                    "| value:",
+                    value
+                )
+
+            for text, value in values:
+
+                print("\nSelecting:", text)
+
+                try:
+                    select.select_option(value)
+
+                    page.wait_for_timeout(5000)
+
+                    print(
+                        "Selected:",
+                        select.input_value()
+                    )
+
+                except Exception as e:
+                    print(
+                        "Selection error:",
+                        e
+                    )
+
+    print("\n========== FINAL PAGE TEXT ==========")
+
+    text = page.locator("body").inner_text()
+
+    print(text[:15000])
+
+    print("\n========== WAITING ==========")
+
+    page.wait_for_timeout(5000)
 
     browser.close()
+
+print("\n========== DEBUG COMPLETE ==========")
