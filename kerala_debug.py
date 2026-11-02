@@ -1,50 +1,14 @@
 from playwright.sync_api import sync_playwright
 
-URL = "https://trivandrum.german.in/home-exams?cmbcentre=0"
-
-BATCHES = {
-    "Trivandrum B2.2": "4151",
-    "Kochi B2.2": "4121",
-    "Calicut B2.2": "4126"
-}
+URL = "https://trivandrum.german.in/"
 
 with sync_playwright() as p:
+
     browser = p.chromium.launch(headless=True)
+
     page = browser.new_page()
 
-    print("Opening Kerala exam portal...")
-
-    def handle_request(request):
-        url = request.url.lower()
-
-        if any(x in url for x in [
-            "exam", "batch", "seat", "ajax", "api"
-        ]):
-            print(f"\nREQUEST: {request.method} {request.url}")
-
-            if request.post_data:
-                print("POST DATA:", request.post_data)
-
-    def handle_response(response):
-        url = response.url.lower()
-
-        if any(x in url for x in [
-            "exam", "batch", "seat", "ajax", "api"
-        ]):
-            print(f"\nRESPONSE: {response.status} {response.url}")
-
-            try:
-                text = response.text()
-
-                if text:
-                    print("RESPONSE BODY:")
-                    print(text[:5000])
-
-            except Exception as e:
-                print("Could not read response:", e)
-
-    page.on("request", handle_request)
-    page.on("response", handle_response)
+    print("Opening official Kerala portal...")
 
     page.goto(
         URL,
@@ -54,72 +18,239 @@ with sync_playwright() as p:
 
     page.wait_for_timeout(5000)
 
+    # =====================================================
+    # SELECT ELEMENTS
+    # =====================================================
+
     print("\n========== SELECT ELEMENTS ==========")
 
     selects = page.locator("select")
 
-    print("Total selects:", selects.count())
+    print(
+        "Total selects:",
+        selects.count()
+    )
 
     for i in range(selects.count()):
 
         select = selects.nth(i)
 
+        select_id = select.get_attribute("id")
+        select_name = select.get_attribute("name")
+
+        print(
+            f"\nSELECT {i}"
+        )
+
+        print(
+            "ID:",
+            select_id
+        )
+
+        print(
+            "NAME:",
+            select_name
+        )
+
         options = select.locator("option")
 
-        values = []
+        print(
+            "Options:",
+            options.count()
+        )
 
-        for j in range(options.count()):
+        for j in range(
+            min(options.count(), 30)
+        ):
 
             option = options.nth(j)
 
             text = option.inner_text().strip()
-            value = option.get_attribute("value")
 
-            if value in BATCHES.values():
-                values.append((text, value))
+            value = option.get_attribute(
+                "value"
+            )
 
-        if values:
+            print(
+                f"  {j}: {text} | value={value}"
+            )
 
-            print("\nSELECT:", i)
 
-            for text, value in values:
-                print(
-                    "FOUND:",
-                    text,
-                    "| value:",
-                    value
-                )
+    # =====================================================
+    # BUTTONS
+    # =====================================================
 
-            for text, value in values:
+    print(
+        "\n========== BUTTONS =========="
+    )
 
-                print("\nSelecting:", text)
+    buttons = page.locator(
+        "button"
+    )
 
-                try:
-                    select.select_option(value)
+    print(
+        "Total buttons:",
+        buttons.count()
+    )
 
-                    page.wait_for_timeout(5000)
+    for i in range(
+        buttons.count()
+    ):
 
-                    print(
-                        "Selected:",
-                        select.input_value()
-                    )
+        button = buttons.nth(i)
 
-                except Exception as e:
-                    print(
-                        "Selection error:",
-                        e
-                    )
+        try:
+            text = button.inner_text().strip()
+        except:
+            text = ""
 
-    print("\n========== FINAL PAGE TEXT ==========")
+        button_id = button.get_attribute(
+            "id"
+        )
 
-    text = page.locator("body").inner_text()
+        button_class = button.get_attribute(
+            "class"
+        )
 
-    print(text[:15000])
+        print(
+            f"\nBUTTON {i}"
+        )
 
-    print("\n========== WAITING ==========")
+        print(
+            "Text:",
+            text
+        )
 
-    page.wait_for_timeout(5000)
+        print(
+            "ID:",
+            button_id
+        )
+
+        print(
+            "Class:",
+            button_class
+        )
+
+
+    # =====================================================
+    # LINKS
+    # =====================================================
+
+    print(
+        "\n========== LINKS =========="
+    )
+
+    links = page.locator(
+        "a"
+    )
+
+    print(
+        "Total links:",
+        links.count()
+    )
+
+    for i in range(
+        links.count()
+    ):
+
+        link = links.nth(i)
+
+        try:
+            text = link.inner_text().strip()
+        except:
+            text = ""
+
+        href = link.get_attribute(
+            "href"
+        )
+
+        if (
+            "register" in text.lower()
+            or "exam" in text.lower()
+            or "register" in str(href).lower()
+            or "exam" in str(href).lower()
+        ):
+
+            print(
+                f"\nLINK {i}"
+            )
+
+            print(
+                "Text:",
+                text
+            )
+
+            print(
+                "HREF:",
+                href
+            )
+
+
+    # =====================================================
+    # REGISTRATION TEXT
+    # =====================================================
+
+    print(
+        "\n========== REGISTRATION TEXT =========="
+    )
+
+    body_text = page.locator(
+        "body"
+    ).inner_text()
+
+    lines = body_text.splitlines()
+
+    for line in lines:
+
+        line = line.strip()
+
+        if any(
+            word in line.lower()
+            for word in [
+                "registration",
+                "register for exam",
+                "registration starts",
+                "exam date",
+                "remaining seats"
+            ]
+        ):
+
+            print(
+                line
+            )
+
+
+    # =====================================================
+    # PAGE HTML SEARCH
+    # =====================================================
+
+    print(
+        "\n========== HTML KEYWORDS =========="
+    )
+
+    html = page.content()
+
+    keywords = [
+        "Registration Date",
+        "Register for Exam",
+        "registration",
+        "register",
+        "batch_id",
+        "cmbExamCentre"
+    ]
+
+    for keyword in keywords:
+
+        print(
+            keyword,
+            "=>",
+            keyword.lower() in html.lower()
+        )
+
 
     browser.close()
 
-print("\n========== DEBUG COMPLETE ==========")
+
+print(
+    "\n========== DIAGNOSTIC COMPLETE =========="
+)
