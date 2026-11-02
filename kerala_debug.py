@@ -2,129 +2,84 @@ from playwright.sync_api import sync_playwright
 
 URL = "https://trivandrum.german.in/home-exams?cmbcentre=0"
 
-KEYWORDS = [
-    "api", "ajax", "json", "exam", "seat",
-    "registration", "booking", "batch", "centre", "center"
-]
-
 with sync_playwright() as p:
     browser = p.chromium.launch(headless=True)
+
     page = browser.new_page()
 
     print("Opening Kerala exam portal...")
 
-    def handle_request(request):
-        url = request.url.lower()
-
-        if any(k in url for k in KEYWORDS):
-            print(f"\nREQUEST: {request.method} {request.url}")
-
-            if request.post_data:
-                print("POST DATA:", request.post_data)
-
-    def handle_response(response):
-        url = response.url.lower()
-
-        if any(k in url for k in KEYWORDS):
-            print(f"\nRESPONSE: {response.status} {response.url}")
-
-    page.on("request", handle_request)
-    page.on("response", handle_response)
-
     page.goto(
         URL,
-        wait_until="networkidle",
+        wait_until="domcontentloaded",
         timeout=60000
     )
 
-    print("\n========== CENTRE DROPDOWN ==========")
+    print("Page loaded.")
 
-    centre = page.locator("#cmbExamCentre")
+    # Allow JavaScript to finish creating the exam elements
+    page.wait_for_timeout(10000)
 
-    print("Centre count:", centre.count())
+    print("\n========== PAGE CHECK ==========")
 
-    if centre.count() > 0:
-        options = centre.locator("option")
+    print("URL:", page.url)
+    print("Title:", page.title())
 
-        for i in range(options.count()):
-            option = options.nth(i)
+    # Check all select elements
+    selects = page.locator("select")
+
+    print("\nSelect count:", selects.count())
+
+    for i in range(selects.count()):
+
+        select = selects.nth(i)
+
+        print(f"\nSELECT {i}")
+
+        print("ID:", select.get_attribute("id"))
+        print("Name:", select.get_attribute("name"))
+        print("Class:", select.get_attribute("class"))
+
+        options = select.locator("option")
+
+        print("Options:", options.count())
+
+        for j in range(min(options.count(), 10)):
+
+            option = options.nth(j)
 
             print(
-                i,
-                "|",
+                " ",
                 option.inner_text().strip(),
                 "| value:",
                 option.get_attribute("value")
             )
 
-    centres = {
-        "Trivandrum": "1",
-        "Kochi": "3",
-        "Calicut": "4"
-    }
+    print("\n========== EXAM CENTRE SEARCH ==========")
 
-    for centre_name, centre_value in centres.items():
+    # Search the HTML for the known centre ID
+    html = page.content()
 
-        print("\n\n========================================")
-        print("TESTING CENTRE:", centre_name)
-        print("========================================")
+    if "cmbExamCentre" in html:
+        print("FOUND: cmbExamCentre")
+    else:
+        print("NOT FOUND: cmbExamCentre")
 
-        page.goto(
-            URL,
-            wait_until="networkidle",
-            timeout=60000
-        )
+    if "Trivandrum" in html:
+        print("FOUND: Trivandrum")
+    else:
+        print("NOT FOUND: Trivandrum")
 
-        centre = page.locator("#cmbExamCentre")
+    if "Remaining Seats" in html:
+        print("FOUND: Remaining Seats")
+    else:
+        print("NOT FOUND: Remaining Seats")
 
-        if centre.count() == 0:
-            print("Centre dropdown not found.")
-            continue
+    print("\n========== PAGE TEXT ==========")
 
-        print("Selecting:", centre_name)
+    text = page.locator("body").inner_text()
 
-        centre.select_option(centre_value)
-
-        page.wait_for_timeout(3000)
-
-        print("\n--- Exam dropdowns after centre selection ---")
-
-        selects = page.locator("select")
-
-        for i in range(selects.count()):
-
-            select = selects.nth(i)
-
-            try:
-                options = select.locator("option")
-
-                visible_options = []
-
-                for j in range(options.count()):
-
-                    option = options.nth(j)
-
-                    text = option.inner_text().strip()
-                    value = option.get_attribute("value")
-
-                    if text and text != "--Select--":
-                        visible_options.append(
-                            f"{text} | value={value}"
-                        )
-
-                if visible_options:
-
-                    print(f"\nSELECT {i}:")
-
-                    for item in visible_options:
-                        print(" ", item)
-
-            except Exception as e:
-                print("Select error:", e)
-
-        print("\nWaiting for additional network requests...")
-
-        page.wait_for_timeout(3000)
+    print(text[:12000])
 
     browser.close()
 
